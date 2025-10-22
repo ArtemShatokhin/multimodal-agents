@@ -1,0 +1,46 @@
+---
+description: Guidance for developing and modifying the Ad Creator agent
+alwaysApply: false
+---
+
+# Scope
+- These rules provide guidelines on how to build and modify `ad_creator_agent`.
+- Keep edits constrained to `ad_creator_agent/` unless intentionally coordinating shared utilities.
+- Use this file to align prompt updates, tool additions, and testing strategy with Agency Swarm conventions.
+
+# Ad Creator Agent Purpose
+- Deliver compelling marketing visuals—logos, ads, composites—tailored to brand briefs using generation, edit, and merge workflows.
+- Design logos separately from the main ad, then integrate them during a later stage of image generation.
+- Produce reproducible assets accompanied by prompts, seeds, and metadata so downstream teams can iterate confidently.
+
+# Design Workflow
+1. Research available API options for image generation.
+2. Analyze existing files in the agent folder, if present.
+3. Construct tools one by one inside the `tools/` folder that allow the agent to generate, edit, and combine images. Use either `@function_tool` or `BaseTool`.
+4. Load environment variables with `dotenv`; never require API keys as tool inputs.
+5. Ensure each tool returns image outputs as described in the OpenAI Agents documentation: <https://openai.github.io/openai-agents-python/tools/#returning-images-or-files-from-function-tools>.
+6. Extend shared helpers in `tools/utils/` instead of duplicating image-processing logic.
+7. If the agent collaborates with other agents, define the pipeline for agent-to-agent interaction and file sharing.
+8. Test each tool individually before proceeding with agent development.
+9. After tools are ready, create the Ad Creator agent. Begin with `instructions.md`, outlining the role, goals, available tools, and usage guidelines.
+
+# Customization Guidelines
+Depending on user requirements, you might need to adjust:
+1. Existing tools—modify or add tools to extend functionality.
+2. Image generation models—swap models or APIs to meet stylistic or fidelity goals.
+3. Agent instructions—update prompts and tool descriptions to reflect new creative direction or constraints.
+
+# Customization Examples
+1. Converting the agent from ad generation to social-media post creation requires instruction updates and possibly a different image generation model for more realistic people imagery.
+2. Supporting user-provided templates requires a tool that downloads assets from URLs and makes them available for editing, compositing, or reuse.
+3. Adding stock image search demands a tool that queries a stock API, surfaces top results, and downloads the selected assets.
+
+# External Integrations
+- Favor stable SDKs (OpenAI Images, Stability, Google, etc.) and pin versions in `requirements.txt`.
+- Update the `Dockerfile` if the setup needs additional system packages or binaries.
+- Document expected asset directories (for example, `tools/outputs/` or caches) and ensure runtime creation when missing.
+
+# Testing & Quality Gates
+- Follow TDD: write or update tests—such as `tests/test_ad_creator_agent.py`—before changing tool behaviour; mock remote services.
+- After modifications run `pytest -q` for the relevant suites and `ruff check ad_creator_agent --fix`.
+- Capture representative sample outputs in `tools/outputs/` to support manual QA and documentation.

@@ -1,0 +1,45 @@
+---
+description: Guidance for developing and modifying the QA agent
+alwaysApply: false
+---
+# Scope
+- These rules outline how to build and maintain `qa_agent`.
+- Keep edits confined to `qa_agent/` unless cross-agent coordination is intentional.
+- Use this file to steer tool updates, browser automation flows, and testing strategy in line with Agency Swarm conventions.
+
+# QA Agent Purpose
+- Validate end-to-end experiences with Selenium-driven tools to analyze ui and identify bugs.
+- Record any inconsistencies, design flaws and bug reproduction steps.
+- Produce actionable reports that downstream agents or humans can act on.
+
+# Design Workflow
+1. Survey existing Selenium utilities under `tools/` and supporting helpers in `tools/utils/`.
+2. Implement browser interaction tools one at a time (navigation, element interaction, capture) using `BaseTool` or `@function_tool`.
+3. Reuse the persistent session manager (`session_manager.py`) rather than spawning new drivers per call.
+4. Validate navigation success before interactions; add configurable waits/headless toggles for brittle flows.
+5. Capture outputs (screenshots, HTML dumps) and save them to deterministic folders (e.g., `tools/screenshots/`).
+6. When collaborating with other agents, define file-sharing or handoff protocols for captured artifacts.
+7. Load environment variables with `dotenv`; never accept credentials or secrets as tool inputs.
+8. Test each tool in isolation before integrating them with the main agent.
+9. After tools are ready, create the QA Analyst agent. Begin with `instructions.md`, outlining the role, goals, available tools, and usage guidelines.
+
+# Customization Guidelines
+Depending on project demands, you may need to adjust:
+1. Tool coverage - add specialized interaction tools (form fills, drag/drop, accessibility audits).
+2. Browser stack - swap drivers or execution backends (local Chrome vs. remote grid) while keeping abstraction layers consistent.
+3. Instruction prompts - tailor the agent’s testing focus (smoke, regression, accessibility) and escalation protocol.
+
+# Customization Examples
+1. Adapting tests for mobile viewports requires viewport-switching helpers and updated assertions for responsive layouts.
+2. Integrating third-party monitoring (e.g., Sentry breadcrumbs) needs tooling hooks to capture events during automated runs.
+3. Supporting authenticated flows calls for login helpers that store session cookies securely and reuse them across tool invocations.
+
+# External Integrations
+- Favor stable Selenium/WebDriver binaries or services; pin versions in `requirements.txt`.
+- Update the `Dockerfile` when additional system packages (Chrome, drivers, fonts) are required.
+- Document expected directories (session storage, screenshots) and ensure runtime creation if absent.
+
+# Testing & Quality Gates
+- Follow TDD: add or update pytest cases—`tests/test_tool_integration.py`, dedicated QA suites—before changing tool behaviour.
+- Mock external services and network calls to keep test runs deterministic.
+- Run `pytest -q` for relevant suites and `ruff check qa_agent --fix` after modifications; inspect captured artifacts when browser settings change.

@@ -60,8 +60,17 @@ class BrowserSessionManager:
             )
             
             # Initialize the driver
-            service = Service(ChromeDriverManager().install())
-            self._driver = webdriver.Chrome(service=service, options=chrome_options)
+            # Check if system ChromeDriver is available (Docker/production)
+            chromedriver_path = os.environ.get('CHROMEDRIVER_PATH', '/usr/bin/chromedriver')
+            if os.path.exists(chromedriver_path):
+                print(f"Using system ChromeDriver at: {chromedriver_path}")
+                service = Service(chromedriver_path)
+                self._driver = webdriver.Chrome(service=service, options=chrome_options)
+            else:
+                # Fall back to webdriver-manager for local development
+                print("Using webdriver-manager to download ChromeDriver")
+                service = Service(ChromeDriverManager().install())
+                self._driver = webdriver.Chrome(service=service, options=chrome_options)
             
             print(f"Initialized persistent browser session in: {self._session_dir}")
             

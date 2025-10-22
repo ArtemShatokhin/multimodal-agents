@@ -31,6 +31,12 @@ def setup_chrome_options(headless: bool = True, enable_cookies: bool = True, ses
     
     chrome_options = Options()
     
+    # Set Chrome binary location if specified in environment (Docker/production)
+    chrome_bin = os.environ.get('CHROME_BIN')
+    if chrome_bin and os.path.exists(chrome_bin):
+        chrome_options.binary_location = chrome_bin
+        print(f"Using Chrome binary at: {chrome_bin}")
+    
     # Basic Chrome options
     if headless:
         chrome_options.add_argument("--headless")
